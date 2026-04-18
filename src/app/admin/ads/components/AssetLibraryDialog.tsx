@@ -155,10 +155,10 @@ export function AssetLibraryDialog({
         </DialogContent>
       </Dialog>
 
-      {/* 沉浸式放大预览层 - 背景 80vw/80vh，图片占背景 80% */}
+      {/* 沉浸式放大预览层 - 强制打破默认 max-w 限制，实现横向 85vw 画廊感 */}
       <Dialog open={!!previewImage} onOpenChange={(v) => !v && setPreviewImage(null)}>
          <DialogContent 
-           className="w-[80vw] h-[80vh] max-w-none p-0 border-none bg-black/60 shadow-none overflow-hidden flex items-center justify-center [&>button]:hidden"
+           className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[85vw] h-[75vh] max-w-none p-0 border-none bg-black/70 shadow-none overflow-hidden flex items-center justify-center [&>button]:hidden rounded-[2.5rem]"
          >
             <div className="relative w-full h-full flex flex-col items-center justify-center">
               {/* 关闭按钮 */}
