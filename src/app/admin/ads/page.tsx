@@ -105,8 +105,8 @@ export default function AdsAdmin() {
       .order('slot_name', { ascending: true })
     
     if (error) {
-      // 捕获“表不存在”的错误代码
-      if (error.code === '42P01') {
+      const msg = error.message.toLowerCase()
+      if (error.code === '42P01' || msg.includes('could not find') || msg.includes('does not exist')) {
         setTableMissing(true)
       } else {
         toast.error("读取失败: " + error.message)
@@ -129,9 +129,10 @@ export default function AdsAdmin() {
     const { error } = await supabase.from('ads').insert(initialData)
 
     if (error) {
-      if (error.code === '42P01') {
-        setTableMissing(true) // 关键：如果点按钮发现没表，立刻变身为引导模式
-        toast.error("检测到数据库表缺失，请先补全环境")
+       const msg = error.message.toLowerCase()
+       if (error.code === '42P01' || msg.includes('could not find') || msg.includes('does not exist')) {
+        setTableMissing(true)
+        toast.error("检测到数据库表缺失，请点击 SQL 向导进行补全")
       } else {
         toast.error("初始化数据失败: " + error.message)
       }
