@@ -1,6 +1,6 @@
 import { Header } from "@/components/layout/Header"
 import { Sidebar } from "@/components/layout/Sidebar"
-import { LinkCard } from "@/components/shared/LinkCard"
+import { CategoryBlock } from "@/components/shared/CategoryBlock"
 import { AdSlot } from "@/components/shared/AdSlot"
 import { createClient } from "@/utils/supabase/server"
 
@@ -9,13 +9,12 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const supabase = await createClient()
 
-  // 抓取全站最新收录（审批通过）的前 20 个资源
+  // 抓取全站收录（审批通过）的所有资源
   const { data: linksData } = await supabase
     .from('links')
     .select('*')
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
-    .limit(20)
 
   // 抓取分类菜单，避免在客户端被 HTTP 缓存
   const { data: categoriesData } = await supabase
@@ -24,8 +23,9 @@ export default async function Home() {
     .order('sort', { ascending: true })
 
   const categories = categoriesData || []
+  const parents = categories.filter(c => !c.parent_id).sort((a,b) => a.sort - b.sort)
 
-  const recentLinks = linksData || []
+  const allLinks = linksData || []
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -51,16 +51,24 @@ export default async function Home() {
           {/* 首页通栏广告位 */}
           <AdSlot slotName="header" className="mb-10" />
           
-          {recentLinks.length === 0 ? (
+          {parents.length === 0 ? (
              <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-xl">
-                 当前系统内尚无已审核通过的链接信息。
+                 当前系统内尚无任何分类架构数据，请进入后台配置。
              </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentLinks.map((link, idx) => (
-                <LinkCard key={link.id} link={link} delay={idx} />
-              ))}
-            </div>
+             <div className="flex flex-col">
+               {parents.map(parent => {
+                  const subs = categories.filter(c => c.parent_id === parent.id).sort((a,b) => a.sort - b.sort)
+                  return (
+                     <CategoryBlock 
+                        key={parent.id} 
+                        parentCategory={parent} 
+                        subCategories={subs} 
+                        allLinks={allLinks as any} 
+                     />
+                  )
+               })}
+             </div>
           )}
 
           {/* 列表下方广告位 */}

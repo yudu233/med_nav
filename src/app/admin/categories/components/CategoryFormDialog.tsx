@@ -12,21 +12,24 @@ export interface Category {
   name: string
   slug: string
   sort: number
+  parent_id?: string | null
 }
 
 interface CategoryFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialData?: Category | null
+  parentCategories?: Category[]
   onSubmit: (data: Omit<Category, 'id'>) => Promise<void>
 }
 
-export function CategoryFormDialog({ open, onOpenChange, initialData, onSubmit }: CategoryFormDialogProps) {
+export function CategoryFormDialog({ open, onOpenChange, initialData, parentCategories = [], onSubmit }: CategoryFormDialogProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
-    sort: 0
+    sort: 0,
+    parent_id: ""
   })
 
   // 同步外部传入的数据
@@ -35,10 +38,11 @@ export function CategoryFormDialog({ open, onOpenChange, initialData, onSubmit }
       setFormData({
         name: initialData.name || "",
         slug: initialData.slug || "",
-        sort: initialData.sort || 0
+        sort: initialData.sort || 0,
+        parent_id: initialData.parent_id || ""
       })
     } else if (!initialData && open) {
-      setFormData({ name: "", slug: "", sort: 0 })
+      setFormData({ name: "", slug: "", sort: 0, parent_id: "" })
     }
   }, [initialData, open])
 
@@ -49,7 +53,9 @@ export function CategoryFormDialog({ open, onOpenChange, initialData, onSubmit }
     }
     setLoading(true)
     try {
-      await onSubmit(formData)
+      // 提交时，如果 parent_id 为空字符串则转为空以符合外键要求
+      const submitData = { ...formData, parent_id: formData.parent_id === "" ? null : formData.parent_id }
+      await onSubmit(submitData)
       onOpenChange(false)
     } finally {
       setLoading(false)
@@ -75,6 +81,22 @@ export function CategoryFormDialog({ open, onOpenChange, initialData, onSubmit }
               onChange={e => setFormData(prev => ({ ...prev, sort: Number(e.target.value) }))} 
               className="col-span-3" 
             />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="parent" className="text-right text-sm font-medium">所属上级</label>
+            <select
+              id="parent"
+              value={formData.parent_id}
+              onChange={e => setFormData(prev => ({ ...prev, parent_id: e.target.value }))}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
+            >
+              <option value="">作为一级分类 (无上级)</option>
+              {parentCategories
+                ?.filter(c => c.id !== initialData?.id) // 防止将自己选为父级
+                .map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="name" className="text-right text-sm font-medium">显示名称</label>

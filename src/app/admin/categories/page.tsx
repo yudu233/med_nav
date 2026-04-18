@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Loader2, Plus, GripVertical, Settings2 } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/utils/supabase/client"
@@ -111,13 +111,18 @@ export default function CategoriesAdmin() {
     setLoading(false)
   }
 
-  const sqlScript = `create table categories (
+  const sqlScript = `-- 首次建表指令:
+create table categories (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text not null unique,
   sort integer default 0,
+  parent_id uuid references categories(id) on delete cascade,
   created_at timestamp with time zone default now()
 );
+
+-- 如果您已建有旧表，请仅运行以下命令:
+-- alter table categories add column parent_id uuid references categories(id) on delete cascade;
 
 alter table categories enable row level security;
 create policy "所有人可读取分类" on categories for select using (true);
@@ -192,39 +197,78 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
               </tr>
             </thead>
             <tbody>
-              {categories.map(cat => (
-                <tr key={cat.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors group">
-                  <td className="px-4 py-4 font-mono text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <GripVertical className="h-3 w-3 opacity-20" />
-                      <span className="font-semibold text-foreground/80">{cat.sort}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 font-semibold text-foreground">{cat.name}</td>
-                  <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-                    <span className="bg-muted px-2 py-1 rounded-md">{cat.slug}</span>
-                  </td>
-                  <td className="px-4 py-4 text-right">
-                    <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
-                        onClick={() => {
-                          setActiveCategory(cat)
-                          setIsSheetOpen(true)
-                        }}
-                      >
-                        网址管理
-                      </Button>
-                      <Button size="sm" variant="ghost" className="h-8" onClick={() => {
-                        setEditingCategory(cat)
-                        setIsDialogOpen(true)
-                      }}>编辑修改</Button>
-                      <Button size="sm" variant="ghost" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDelete(cat.id)}>丢弃</Button>
-                    </div>
-                  </td>
-                </tr>
+              {categories.filter(c => !c.parent_id).map(parentCat => (
+                <React.Fragment key={parentCat.id}>
+                  {/* 一级分类行 */}
+                  <tr className="border-b last:border-0 hover:bg-muted/30 transition-colors group">
+                    <td className="px-4 py-4 font-mono text-muted-foreground w-24">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-3 w-3 opacity-20" />
+                        <span className="font-semibold text-foreground/80">{parentCat.sort}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 font-semibold text-foreground text-base">{parentCat.name}</td>
+                    <td className="px-4 py-4 font-mono text-xs text-muted-foreground w-1/4">
+                      <span className="bg-muted px-2 py-1 rounded-md">{parentCat.slug}</span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                          onClick={() => {
+                            setActiveCategory(parentCat)
+                            setIsSheetOpen(true)
+                          }}
+                        >
+                          网址管理
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8" onClick={() => {
+                          setEditingCategory(parentCat)
+                          setIsDialogOpen(true)
+                        }}>编辑</Button>
+                        <Button size="sm" variant="ghost" className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDelete(parentCat.id)}>丢弃</Button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* 二级分类行 */}
+                  {categories.filter(c => c.parent_id === parentCat.id).map(subCat => (
+                    <tr key={subCat.id} className="border-b last:border-0 bg-muted/10 hover:bg-muted/30 transition-colors group">
+                      <td className="px-4 py-3 font-mono text-muted-foreground text-xs w-24 text-right pr-6">
+                        {subCat.sort}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-foreground/80 flex items-center">
+                         <span className="w-4 h-px bg-border inline-block mr-2" />
+                         {subCat.name}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-xs text-muted-foreground w-1/4">
+                        <span className="bg-background px-2 py-1 rounded-md border">{subCat.slug}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
+                            onClick={() => {
+                              setActiveCategory(subCat)
+                              setIsSheetOpen(true)
+                            }}
+                          >
+                            挂载网址
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => {
+                            setEditingCategory(subCat)
+                            setIsDialogOpen(true)
+                          }}>编辑</Button>
+                          <Button size="sm" variant="ghost" className="h-7 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDelete(subCat.id)}>删除</Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
@@ -236,6 +280,7 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         initialData={editingCategory}
+        parentCategories={categories.filter(c => !c.parent_id)} // 仅将一级分类可选作父级
         onSubmit={handleFormSubmit}
       />
 
