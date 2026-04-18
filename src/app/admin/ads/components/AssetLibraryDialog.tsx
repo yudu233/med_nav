@@ -155,25 +155,30 @@ export function AssetLibraryDialog({
         </DialogContent>
       </Dialog>
 
-      {/* 沉浸式放大预览层 - 优化后的全屏预览 */}
+      {/* 沉浸式放大预览层 - 隐藏默认关闭按钮并精确控制图片 80% 比例 */}
       <Dialog open={!!previewImage} onOpenChange={(v) => !v && setPreviewImage(null)}>
-         <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 border-none bg-black/40 shadow-none overflow-hidden flex items-center justify-center">
-            <div className="relative w-full h-full flex items-center justify-center p-4">
+         <DialogContent 
+           className="max-w-[90vw] max-h-[90vh] w-full h-full p-0 border-none bg-black/60 shadow-none overflow-hidden flex items-center justify-center [&>button]:hidden"
+         >
+            <div className="relative w-full h-full flex flex-col items-center justify-center p-4">
+              {/* 自定义右上角关闭按钮 */}
               <Button 
-                variant="outline" 
+                variant="ghost" 
                 size="icon" 
-                className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border-none shadow-2xl h-12 w-12 backdrop-blur-md"
+                className="absolute top-6 right-6 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white h-12 w-12 backdrop-blur-md"
                 onClick={() => setPreviewImage(null)}
               >
                  <X className="h-6 w-6" />
               </Button>
               
               {previewImage && (
-                <img 
-                  src={previewImage} 
-                  alt="preview" 
-                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-300 transform scale-100 translate-z-0" 
-                />
+                <div className="w-[80%] h-[80%] flex items-center justify-center">
+                  <img 
+                    src={previewImage} 
+                    alt="preview" 
+                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xl transition-transform duration-300" 
+                  />
+                </div>
               )}
             </div>
          </DialogContent>
