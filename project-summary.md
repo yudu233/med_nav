@@ -33,12 +33,12 @@
 *   **Supabase Client 封装**: 在 `src/utils/supabase/` 下完成了 server, client 与 middleware 的实例化包装，随时准备向远端鉴权并交互。
 *   **Admin 后台 UI 骨架**:
     *   `/admin/links`: 网址列表及审核面板（当前展示 Mock 状态）。
-    *   `/admin/categories`: 对侧边结构、医科类别进行可视化增删改查的页卡。
+    *   `/admin/categories`: 对侧边结构、医科类别进行可视化增删改查的页卡（**已完成：完整接入 Supabase 进行 CRUD，并利用右侧 Sheet 抽屉实现特定类目下的沉浸式网址管理**）。
     *   `/admin/ads`: 广告赞助位已完成组件拆分 (AssetLibraryDialog / AdSlotCard)，解决了弹框大小受限问题，并实现了素材原图的沉浸式放大预览功能。
 
 ## 4. 正在进行中的功能 (Work In Progress)
 
-*(当前暂无正在冲刺的模块，请下达新指令)*
+*(暂无进行中的特定大型 Feature)*
 
 ## 5. 待开发的功能 (To-Do / Backlog)
 
