@@ -19,21 +19,7 @@ export default function AdsAdmin() {
     fetchAssets()
   }, [])
 
-  const fetchAds = async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('ads')
-      .select('*')
-      .order('slot_name', { ascending: true })
-    
-    // 如果数据库没数据，这里 adSlots 就是空的，点击肯定没反应
-    if (error) {
-      toast.error("读取广告配置失败: " + error.message)
-    } else {
-      setAdSlots(data || [])
-    }
-    setLoading(false)
-  }
+
 
   // 获取过去上传过的素材
   const fetchAssets = async () => {
