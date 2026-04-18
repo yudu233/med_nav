@@ -108,6 +108,25 @@ export default function AdsAdmin() {
     await handleUpdateAd({ ...target, image_url: url })
   }
 
+  const handleInitDB = async () => {
+    setLoading(true)
+    const initialData = [
+      { slot_name: 'header', name: '首页顶部通栏', is_active: false, target_url: '' },
+      { slot_name: 'sidebar', name: '侧边栏挂件', is_active: false, target_url: '' },
+      { slot_name: 'list', name: '列表间隙广告', is_active: false, target_url: '' }
+    ]
+
+    const { error } = await supabase.from('ads').insert(initialData)
+
+    if (error) {
+      toast.error("初始化失败: " + error.message)
+    } else {
+      toast.success("初始化成功！已生成 3 个基础广告位")
+      fetchAds() // 重新加载
+    }
+    setLoading(false)
+  }
+
   if (loading) {
     return <div className="flex h-[400px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
   }
@@ -115,8 +134,14 @@ export default function AdsAdmin() {
   if (adSlots.length === 0) {
     return (
       <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
-        <p className="text-muted-foreground">检测到 ads 数据表为空</p>
-        <Button onClick={fetchAds}>刷新重试</Button>
+        <div className="text-center">
+          <p className="text-lg font-medium">检测到 ads 数据表内尚无数据</p>
+          <p className="text-sm text-muted-foreground">正常运行需要预设 3 个核心广告位标识</p>
+        </div>
+        <div className="flex gap-4 mt-2">
+           <Button onClick={handleInitDB} size="lg">一键初始化广告位</Button>
+           <Button onClick={fetchAds} variant="outline" size="lg">重新扫描数据库</Button>
+        </div>
       </div>
     )
   }
