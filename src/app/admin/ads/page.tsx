@@ -217,12 +217,9 @@ create policy "管理员可操作广告" on ads for all using (auth.role() = 'au
       </div>
     )
   }
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">广告位管理</h1>
-          <p className="text-muted-foreground mt-1">控制预留的医疗广告资源位置。您可以上传、从库选择素材并设置跳转链接。</p>
-        </div>
-      </div>
+
+  return (
+    <div className="space-y-6">
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {adSlots.map(slot => (
