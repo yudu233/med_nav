@@ -38,6 +38,7 @@ const mockLinks = [
 ]
 
 import { LinkCard } from "@/components/shared/LinkCard"
+import { AdSlot } from "@/components/shared/AdSlot"
 
 export default function Home() {
   return (
@@ -46,9 +47,13 @@ export default function Home() {
       <div className="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 mx-auto max-w-7xl px-4 md:px-6 py-6">
         <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
           <Sidebar />
+          {/* 侧边栏广告位 */}
+          <div className="mt-8 px-4">
+            <AdSlot slotName="sidebar" />
+          </div>
         </aside>
         <main className="flex w-full flex-col overflow-hidden">
-          <div className="mb-8 flex flex-col items-start gap-2">
+          <div className="mb-6 flex flex-col items-start gap-2">
             <h1 className="text-3xl font-bold leading-tight tracking-tighter md:text-4xl lg:leading-[1.1]">
               精准医疗科研导航
             </h1>
@@ -56,12 +61,18 @@ export default function Home() {
               为您提供权威、纯净的临床及学术网址聚合。
             </p>
           </div>
+
+          {/* 首页通栏广告位 */}
+          <AdSlot slotName="header" className="mb-10" />
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {mockLinks.map((link, idx) => (
               <LinkCard key={link.id} link={link} delay={idx} />
             ))}
           </div>
+
+          {/* 列表下方广告位 */}
+          <AdSlot slotName="list" className="mt-12" />
         </main>
       </div>
     </div>
