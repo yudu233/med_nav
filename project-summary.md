@@ -33,6 +33,7 @@
 *   **Supabase Client 封装**: 在 `src/utils/supabase/` 下完成了 server, client 与 middleware 的实例化包装，随时准备向远端鉴权并交互。
 *   **Admin 后台 UI 骨架**:
     *   `/admin/links`: 网址列表及审核面板（当前展示 Mock 状态）。
+*   **前端核心呈现区 (C 端)**: 用户前台已经关联真实的 Supabase 分类与链接流（自动过滤 status 不匹配的内容）。
     *   `/admin/categories`: 对侧边结构、医科类别进行可视化增删改查的页卡（**已完成：完整接入 Supabase 进行 CRUD，并利用右侧 Sheet 抽屉实现特定类目下的沉浸式网址管理**）。
     *   `/admin/ads`: 广告赞助位已完成组件拆分 (AssetLibraryDialog / AdSlotCard)，解决了弹框大小受限问题，并实现了素材原图的沉浸式放大预览功能。
 
@@ -42,7 +43,6 @@
 
 ## 5. 待开发的功能 (To-Do / Backlog)
 
-*   **前端核心呈现区 (C 端)**: 用户前台用于分科室展示链接的卡片流，以及基于模糊匹配的搜索功能。
 *   **用户侧主动提交**: 允许非登录用户（或网友）提交 URL 申请（将数据写入 `Links` 表，并标记 `status`为 `pending` 供管理员审核）。
 *   **流量与点击追踪**: 用户通过 MedNav 出站跳转到外部站点的中间拦截打点，以及对应的数据统计表盘。
 *   **全量 API 接入**: 目前首要任务是将 `supabase` 实例的方法接入，对 `/admin/` 目录下的项目列表进行真实数据 CRUD 替换（替换现有的 Mock Array）。

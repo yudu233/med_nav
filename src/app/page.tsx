@@ -1,46 +1,22 @@
 import { Header } from "@/components/layout/Header"
 import { Sidebar } from "@/components/layout/Sidebar"
-
-// Mock 数据，待接 supabase
-const mockLinks = [
-  {
-    id: "uuid-1",
-    title: "PubMed",
-    url: "https://pubmed.ncbi.nlm.nih.gov/",
-    description: "美国国立卫生研究院（NIH）的国家医学图书馆（NLM）提供的生物医学论文搜索引擎。",
-    click_count: 15420,
-    icon_url: "https://www.google.com/s2/favicons?sz=64&domain=pubmed.ncbi.nlm.nih.gov"
-  },
-  {
-    id: "uuid-2",
-    title: "Nature Medicine",
-    url: "https://www.nature.com/nm/",
-    description: "《自然-医学》是一本发表生物医学各领域具有突出重要性和广泛兴趣的原创研究论文的同行评议月刊。",
-    click_count: 8300,
-    icon_url: "https://www.google.com/s2/favicons?sz=64&domain=nature.com"
-  },
-  {
-    id: "uuid-3",
-    title: "丁香园",
-    url: "https://www.dxy.cn/",
-    description: "专业面向医生、医疗机构、医药从业者以及生命科学领域的专业社交网站。",
-    click_count: 22010,
-    icon_url: "https://www.google.com/s2/favicons?sz=64&domain=dxy.cn"
-  },
-  {
-    id: "uuid-4",
-    title: "中华医学期刊网",
-    url: "https://www.yiigle.com/",
-    description: "中华医学会旗下全系列数百本权威中文医学期刊的官方平台。",
-    click_count: 5120,
-    icon_url: "https://www.google.com/s2/favicons?sz=64&domain=yiigle.com"
-  }
-]
-
 import { LinkCard } from "@/components/shared/LinkCard"
 import { AdSlot } from "@/components/shared/AdSlot"
+import { createClient } from "@/utils/supabase/server"
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient()
+
+  // 抓取全站最新收录（审批通过）的前 20 个资源
+  const { data: linksData } = await supabase
+    .from('links')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  const recentLinks = linksData || []
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -58,18 +34,24 @@ export default function Home() {
               精准医疗科研导航
             </h1>
             <p className="text-lg font-light text-muted-foreground/80 max-w-[600px]">
-              为您提供权威、纯净的临床及学术网址聚合。
+              为您提供权威、纯净的临床及学术网址聚合。这里展示了最新收录的优质资源。
             </p>
           </div>
 
           {/* 首页通栏广告位 */}
           <AdSlot slotName="header" className="mb-10" />
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockLinks.map((link, idx) => (
-              <LinkCard key={link.id} link={link} delay={idx} />
-            ))}
-          </div>
+          {recentLinks.length === 0 ? (
+             <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-xl">
+                 当前系统内尚无已审核通过的链接信息。
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentLinks.map((link, idx) => (
+                <LinkCard key={link.id} link={link} delay={idx} />
+              ))}
+            </div>
+          )}
 
           {/* 列表下方广告位 */}
           <AdSlot slotName="list" className="mt-12" />

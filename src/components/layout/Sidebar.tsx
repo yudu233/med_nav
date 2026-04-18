@@ -1,28 +1,39 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-
+import { createClient } from "@/utils/supabase/client"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type Category = {
   id: string
   name: string
   slug: string
+  sort: number
 }
-
-// TODO: 后续将替换为从 Supabase 读取
-const mockCategories: Category[] = [
-  { id: "1", name: "心血管科", slug: "cardiology" },
-  { id: "2", name: "神经外科", slug: "neurosurgery" },
-  { id: "3", name: "肿瘤科", slug: "oncology" },
-  { id: "4", name: "科研工具", slug: "research-tools" },
-  { id: "5", name: "医学影像", slug: "imaging" },
-  { id: "6", name: "指南文献", slug: "guidelines" },
-]
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
+  const supabase = createClient()
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchCategories() {
+      const { data } = await supabase
+        .from('categories')
+        .select('*')
+        .order('sort', { ascending: true })
+      
+      if (data) {
+        setCategories(data)
+      }
+      setLoading(false)
+    }
+    fetchCategories()
+  }, [])
 
   return (
     <div className={cn("pb-12", className)}>
@@ -42,20 +53,30 @@ export function Sidebar({ className }: { className?: string }) {
                 推荐资源
               </div>
             </Link>
-            {mockCategories.map((category) => (
-              <Link key={category.id} href={`/category/${category.slug}`}>
-                <div
-                  className={cn(
-                    "w-full flex items-center justify-start rounded-md px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                    pathname === `/category/${category.slug}`
-                      ? "bg-accent text-accent-foreground font-bold text-primary"
-                      : "transparent text-muted-foreground"
-                  )}
-                >
-                  {category.name}
-                </div>
-              </Link>
-            ))}
+            
+            {loading ? (
+              <div className="px-4 py-2 space-y-3 mt-2 outline-none">
+                 <Skeleton className="h-6 w-3/4 rounded-sm" />
+                 <Skeleton className="h-6 w-full rounded-sm" />
+                 <Skeleton className="h-6 w-2/3 rounded-sm" />
+                 <Skeleton className="h-6 w-5/6 rounded-sm" />
+              </div>
+            ) : (
+              categories.map((category) => (
+                <Link key={category.id} href={`/category/${category.slug}`}>
+                  <div
+                    className={cn(
+                      "w-full flex items-center justify-start rounded-md px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors",
+                      pathname === `/category/${category.slug}`
+                        ? "bg-accent text-accent-foreground font-bold text-primary"
+                        : "transparent text-muted-foreground"
+                    )}
+                  >
+                    {category.name}
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </div>
