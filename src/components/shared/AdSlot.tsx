@@ -8,19 +8,20 @@ interface AdSlotProps {
 export async function AdSlot({ slotName, className = "" }: AdSlotProps) {
   const supabase = await createClient()
 
-  // 查询对应的且已上线的广告位
-  const { data: ad, error } = await supabase
-    .from('ads')
-    .select('*')
-    .eq('slot_name', slotName)
-    .eq('is_active', true)
-    .single()
+  try {
+    const { data: ad, error } = await supabase
+      .from('ads')
+      .select('*')
+      .eq('slot_name', slotName)
+      .eq('is_active', true)
+      .maybeSingle() // 使用 maybeSingle 防止找不到数据时抛出异常
 
-  if (error || !ad || !ad.image_url) {
-    return null // 没配置或没上线则不渲染
-  }
+    if (error || !ad || !ad.image_url) {
+      return null
+    }
 
-  return (
+    return (
+  
     <div className={`w-full overflow-hidden rounded-lg shadow-sm border border-border/40 bg-muted/30 transition-all hover:shadow-md ${className}`}>
       <a 
         href={ad.target_url} 
@@ -56,4 +57,8 @@ export async function AdSlot({ slotName, className = "" }: AdSlotProps) {
       </a>
     </div>
   )
+  } catch (err) {
+    console.error("AdSlot render error:", err)
+    return null
+  }
 }

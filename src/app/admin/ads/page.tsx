@@ -129,7 +129,12 @@ export default function AdsAdmin() {
     const { error } = await supabase.from('ads').insert(initialData)
 
     if (error) {
-      toast.error("初始化数据失败: " + error.message)
+      if (error.code === '42P01') {
+        setTableMissing(true) // 关键：如果点按钮发现没表，立刻变身为引导模式
+        toast.error("检测到数据库表缺失，请先补全环境")
+      } else {
+        toast.error("初始化数据失败: " + error.message)
+      }
     } else {
       toast.success("初始化成功！已生成核心广告位")
       fetchAds()
