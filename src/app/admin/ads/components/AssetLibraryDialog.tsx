@@ -155,13 +155,13 @@ export function AssetLibraryDialog({
         </DialogContent>
       </Dialog>
 
-      {/* 沉浸式放大预览层 - 隐藏默认关闭按钮并精确控制图片 80% 比例 */}
+      {/* 沉浸式放大预览层 - 横向背景 (1.2:1) + 图片 Cover 80% 区域 */}
       <Dialog open={!!previewImage} onOpenChange={(v) => !v && setPreviewImage(null)}>
          <DialogContent 
-           className="max-w-[90vw] max-h-[90vh] w-full h-full p-0 border-none bg-black/60 shadow-none overflow-hidden flex items-center justify-center [&>button]:hidden"
+           className="max-w-[70vw] w-full aspect-[1.2/1] p-0 border-none bg-black/60 shadow-none overflow-hidden flex items-center justify-center [&>button]:hidden"
          >
-            <div className="relative w-full h-full flex flex-col items-center justify-center p-4">
-              {/* 自定义右上角关闭按钮 */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* 关闭按钮 */}
               <Button 
                 variant="ghost" 
                 size="icon" 
@@ -172,11 +172,11 @@ export function AssetLibraryDialog({
               </Button>
               
               {previewImage && (
-                <div className="w-[80%] h-[80%] flex items-center justify-center">
+                <div className="w-[85%] h-[85%] rounded-2xl overflow-hidden shadow-2xl bg-white flex items-center justify-center">
                   <img 
                     src={previewImage} 
                     alt="preview" 
-                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-2xl transition-transform duration-300" 
+                    className="w-full h-full object-cover transition-transform duration-300" 
                   />
                 </div>
               )}
