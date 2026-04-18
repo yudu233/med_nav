@@ -26,8 +26,11 @@ export default function AdminSetup() {
     if (error) {
       setMessage(`注册失败: ${error.message}`)
     } else {
-      setMessage('注册成功！请前往登录。')
-      setTimeout(() => router.push('/admin-login'), 1500)
+      setMessage('管理员账号创建成功！正在为您转跳至登录界面...')
+      // 延迟 1.5 秒跳转，给用户足够的读取反馈时间
+      setTimeout(() => {
+        router.push('/admin-login')
+      }, 1500)
     }
     setLoading(false)
   }
