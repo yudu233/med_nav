@@ -108,6 +108,30 @@ export default function AdsAdmin() {
     await handleUpdateAd({ ...target, image_url: url })
   }
 
+
+  const [tableMissing, setTableMissing] = useState(false)
+
+  const fetchAds = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('ads')
+      .select('*')
+      .order('slot_name', { ascending: true })
+    
+    if (error) {
+      // 捕获“表不存在”的错误代码
+      if (error.code === '42P01') {
+        setTableMissing(true)
+      } else {
+        toast.error("读取失败: " + error.message)
+      }
+    } else {
+      setAdSlots(data || [])
+      setTableMissing(false)
+    }
+    setLoading(false)
+  }
+
   const handleInitDB = async () => {
     setLoading(true)
     const initialData = [
@@ -119,35 +143,80 @@ export default function AdsAdmin() {
     const { error } = await supabase.from('ads').insert(initialData)
 
     if (error) {
-      toast.error("初始化失败: " + error.message)
+      toast.error("初始化数据失败: " + error.message)
     } else {
-      toast.success("初始化成功！已生成 3 个基础广告位")
-      fetchAds() // 重新加载
+      toast.success("初始化成功！已生成核心广告位")
+      fetchAds()
     }
     setLoading(false)
   }
+
+  const sqlScript = `create table ads (
+  id uuid primary key default gen_random_uuid(),
+  slot_name text not null unique,
+  name text,
+  image_url text,
+  target_url text,
+  is_active boolean default false,
+  created_at timestamp with time zone default now()
+);
+
+-- 开启公共读取权限
+alter table ads enable row level security;
+create policy "所有人可读广告" on ads for select using (true);
+create policy "管理员可操作广告" on ads for all using (auth.role() = 'authenticated');`
 
   if (loading) {
     return <div className="flex h-[400px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
   }
 
-  if (adSlots.length === 0) {
+  // 场景 A: 数据库根本没有 ads 表
+  if (tableMissing) {
     return (
-      <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
-        <div className="text-center">
-          <p className="text-lg font-medium">检测到 ads 数据表内尚无数据</p>
-          <p className="text-sm text-muted-foreground">正常运行需要预设 3 个核心广告位标识</p>
+      <div className="max-w-3xl mx-auto py-12 space-y-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-red-600">⚠️ 检测到数据库环境不完整</h2>
+          <p className="text-muted-foreground">您的 Supabase 数据库中尚未建立 "ads" 数据表，无法存储配置。</p>
         </div>
-        <div className="flex gap-4 mt-2">
-           <Button onClick={handleInitDB} size="lg">一键初始化广告位</Button>
-           <Button onClick={fetchAds} variant="outline" size="lg">重新扫描数据库</Button>
+        
+        <div className="bg-black text-green-400 p-6 rounded-xl font-mono text-sm relative group">
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button size="sm" variant="secondary" onClick={() => {
+              navigator.clipboard.writeText(sqlScript)
+              toast.success("SQL 已复制到剪贴板")
+            }}>一键复制脚本</Button>
+          </div>
+          <pre className="overflow-x-auto">{sqlScript}</pre>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl flex flex-col items-center gap-4">
+           <p className="text-blue-800 text-sm text-center">
+             由于云服务安全策略限制，我无法远程直接为您建表。<br/>
+             请点击下方按钮打开 Supabase，在 <b>SQL Editor</b> 中粘贴并运行，完成后点击“我已运行”。
+           </p>
+           <div className="flex gap-4">
+              <a href="https://supabase.com/dashboard/project/_/sql" target="_blank" rel="noreferrer">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">1. 点我打开 SQL 编辑器</Button>
+              </a>
+              <Button size="lg" variant="outline" onClick={fetchAds}>2. 我已运行，点击刷新</Button>
+           </div>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="space-y-6">
+  // 场景 B: 有表但没初始数据
+  if (adSlots.length === 0) {
+    return (
+      <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
+        <div className="text-center">
+          <p className="text-lg font-medium">✨ 数据库已就绪，准备开荒</p>
+          <p className="text-sm text-muted-foreground">点击下方按钮，我将为您自动生成 3 个标准广告占位符。</p>
+        </div>
+        <Button onClick={handleInitDB} size="lg">一键生成基础广告位</Button>
+      </div>
+    )
+  }
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">广告位管理</h1>
