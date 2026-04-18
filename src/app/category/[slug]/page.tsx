@@ -5,6 +5,8 @@ import { AdSlot } from "@/components/shared/AdSlot"
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 
+export const dynamic = 'force-dynamic';
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
@@ -32,6 +34,14 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
 
+  // 3. 抓取全局 categories 防止前端菜单数据拿不到最新
+  const { data: allCategoriesData } = await supabase
+    .from('categories')
+    .select('*')
+    .order('sort', { ascending: true })
+
+  const allCategories = allCategoriesData || []
+
   const activeLinks = linksData || []
 
   return (
@@ -39,7 +49,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       <Header />
       <div className="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 mx-auto max-w-7xl px-4 md:px-6 py-6">
         <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
-          <Sidebar />
+          <Sidebar categories={allCategories} />
           <div className="mt-8 px-4">
              <AdSlot slotName="sidebar" />
           </div>

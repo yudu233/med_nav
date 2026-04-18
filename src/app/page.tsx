@@ -4,6 +4,8 @@ import { LinkCard } from "@/components/shared/LinkCard"
 import { AdSlot } from "@/components/shared/AdSlot"
 import { createClient } from "@/utils/supabase/server"
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const supabase = await createClient()
 
@@ -15,6 +17,14 @@ export default async function Home() {
     .order('created_at', { ascending: false })
     .limit(20)
 
+  // 抓取分类菜单，避免在客户端被 HTTP 缓存
+  const { data: categoriesData } = await supabase
+    .from('categories')
+    .select('*')
+    .order('sort', { ascending: true })
+
+  const categories = categoriesData || []
+
   const recentLinks = linksData || []
 
   return (
@@ -22,7 +32,7 @@ export default async function Home() {
       <Header />
       <div className="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 mx-auto max-w-7xl px-4 md:px-6 py-6">
         <aside className="fixed top-14 z-30 -ml-2 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block">
-          <Sidebar />
+          <Sidebar categories={categories} />
           {/* 侧边栏广告位 */}
           <div className="mt-8 px-4">
             <AdSlot slotName="sidebar" />

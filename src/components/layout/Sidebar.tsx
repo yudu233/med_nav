@@ -4,8 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { createClient } from "@/utils/supabase/client"
-import { Skeleton } from "@/components/ui/skeleton"
 
 type Category = {
   id: string
@@ -14,26 +12,8 @@ type Category = {
   sort: number
 }
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar({ className, categories = [] }: { className?: string, categories?: Category[] }) {
   const pathname = usePathname()
-  const supabase = createClient()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    async function fetchCategories() {
-      const { data } = await supabase
-        .from('categories')
-        .select('*')
-        .order('sort', { ascending: true })
-      
-      if (data) {
-        setCategories(data)
-      }
-      setLoading(false)
-    }
-    fetchCategories()
-  }, [])
 
   return (
     <div className={cn("pb-12", className)}>
@@ -54,15 +34,10 @@ export function Sidebar({ className }: { className?: string }) {
               </div>
             </Link>
             
-            {loading ? (
-              <div className="px-4 py-2 space-y-3 mt-2 outline-none">
-                 <Skeleton className="h-6 w-3/4 rounded-sm" />
-                 <Skeleton className="h-6 w-full rounded-sm" />
-                 <Skeleton className="h-6 w-2/3 rounded-sm" />
-                 <Skeleton className="h-6 w-5/6 rounded-sm" />
-              </div>
-            ) : (
-              categories.map((category) => (
+              categories.length === 0 ? (
+                <div className="px-4 py-2 text-sm text-muted-foreground">暂无分类数据</div>
+              ) : (
+                categories.map((category) => (
                 <Link key={category.id} href={`/category/${category.slug}`}>
                   <div
                     className={cn(

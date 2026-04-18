@@ -11,7 +11,7 @@ import { CategoryLinksSheet } from "./components/CategoryLinksSheet"
 
 export default function CategoriesAdmin() {
   const supabase = createClient()
-  
+
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [tableMissing, setTableMissing] = useState(false)
@@ -34,7 +34,7 @@ export default function CategoriesAdmin() {
       .from('categories')
       .select('*')
       .order('sort', { ascending: true })
-    
+
     if (error) {
       const msg = error.message.toLowerCase()
       if (error.code === '42P01' || msg.includes('does not exist') || msg.includes('could not find')) {
@@ -61,7 +61,7 @@ export default function CategoriesAdmin() {
       if (error) {
         toast.error("更新失败: " + error.message)
       } else {
-        setCategories(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...formData } : c).sort((a,b)=>a.sort - b.sort))
+        setCategories(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...formData } : c).sort((a, b) => a.sort - b.sort))
         toast.success("分类更新成功")
       }
     } else {
@@ -75,7 +75,7 @@ export default function CategoriesAdmin() {
       if (error) {
         toast.error("创建失败: " + error.message)
       } else if (data) {
-        setCategories(prev => [...prev, data].sort((a,b)=>a.sort - b.sort))
+        setCategories(prev => [...prev, data].sort((a, b) => a.sort - b.sort))
         toast.success("分类创建成功")
       }
     }
@@ -135,17 +135,17 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
           <p className="text-muted-foreground">请在 Supabase 后台运行以下 SQL 以创建核心数据表。</p>
         </div>
         <div className="bg-zinc-950 text-zinc-300 p-6 rounded-xl font-mono text-sm relative group border border-zinc-800">
-           <Button size="sm" variant="secondary" className="absolute top-4 right-4" onClick={() => {
-              navigator.clipboard.writeText(sqlScript)
-              toast.success("脚本文本已复制")
-            }}>复制 SQL</Button>
+          <Button size="sm" variant="secondary" className="absolute top-4 right-4" onClick={() => {
+            navigator.clipboard.writeText(sqlScript)
+            toast.success("脚本文本已复制")
+          }}>复制 SQL</Button>
           <pre className="overflow-x-auto">{sqlScript}</pre>
         </div>
         <div className="flex justify-center gap-4">
-           <a href="https://supabase.com/dashboard/project/_/sql" target="_blank" rel="noreferrer">
-              <Button size="lg" className="bg-primary hover:bg-primary/90">打开 SQL Dashboard</Button>
-           </a>
-           <Button size="lg" variant="outline" onClick={fetchCategories}>已运行并重新检测</Button>
+          <a href="https://supabase.com/dashboard/project/_/sql" target="_blank" rel="noreferrer">
+            <Button size="lg" className="bg-primary hover:bg-primary/90">打开 SQL Dashboard</Button>
+          </a>
+          <Button size="lg" variant="outline" onClick={fetchCategories}>已运行并重新检测</Button>
         </div>
       </div>
     )
@@ -162,21 +162,21 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
           setEditingCategory(null)
           setIsDialogOpen(true)
         }}>
-          <Plus className="h-4 w-4 mr-2" /> 新增科室/分类
+          <Plus className="h-4 w-4 mr-2" /> 新增分类
         </Button>
       </div>
 
       {categories.length === 0 && !loading && (
         <div className="border border-dashed rounded-xl p-12 text-center flex flex-col items-center">
-           <div className="bg-muted h-12 w-12 rounded-full flex items-center justify-center mb-4">
-             <Settings2 className="h-6 w-6 text-muted-foreground" />
-           </div>
-           <h3 className="text-lg font-medium text-foreground">暂无分类数据</h3>
-           <p className="text-sm text-muted-foreground mt-1 mb-6 max-w-sm">您目前还没有创建任何分类，这可能导致前台无法正常导航。</p>
-           <div className="flex gap-4">
-             <Button onClick={() => setIsDialogOpen(true)} variant="outline">手动新增首个分类</Button>
-             <Button onClick={handleInitDB}>一键导入标准科目示例</Button>
-           </div>
+          <div className="bg-muted h-12 w-12 rounded-full flex items-center justify-center mb-4">
+            <Settings2 className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground">暂无分类数据</h3>
+          <p className="text-sm text-muted-foreground mt-1 mb-6 max-w-sm">您目前还没有创建任何分类，这可能导致前台无法正常导航。</p>
+          <div className="flex gap-4">
+            <Button onClick={() => setIsDialogOpen(true)} variant="outline">手动新增首个分类</Button>
+            <Button onClick={handleInitDB}>一键导入默认分类</Button>
+          </div>
         </div>
       )}
 
@@ -196,26 +196,26 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
                 <tr key={cat.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors group">
                   <td className="px-4 py-4 font-mono text-muted-foreground">
                     <div className="flex items-center gap-2">
-                       <GripVertical className="h-3 w-3 opacity-20" />
-                       <span className="font-semibold text-foreground/80">{cat.sort}</span>
+                      <GripVertical className="h-3 w-3 opacity-20" />
+                      <span className="font-semibold text-foreground/80">{cat.sort}</span>
                     </div>
                   </td>
                   <td className="px-4 py-4 font-semibold text-foreground">{cat.name}</td>
                   <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-                     <span className="bg-muted px-2 py-1 rounded-md">{cat.slug}</span>
+                    <span className="bg-muted px-2 py-1 rounded-md">{cat.slug}</span>
                   </td>
                   <td className="px-4 py-4 text-right">
                     <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         className="h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
                         onClick={() => {
                           setActiveCategory(cat)
                           setIsSheetOpen(true)
                         }}
                       >
-                         网址管理
+                        网址管理
                       </Button>
                       <Button size="sm" variant="ghost" className="h-8" onClick={() => {
                         setEditingCategory(cat)
@@ -232,14 +232,14 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
       )}
 
       {/* Forms & Drawers */}
-      <CategoryFormDialog 
-        open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen} 
-        initialData={editingCategory} 
-        onSubmit={handleFormSubmit} 
+      <CategoryFormDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        initialData={editingCategory}
+        onSubmit={handleFormSubmit}
       />
 
-      <CategoryLinksSheet 
+      <CategoryLinksSheet
         open={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         category={activeCategory}
