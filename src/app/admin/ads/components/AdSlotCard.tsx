@@ -9,7 +9,7 @@ interface AdSlotCardProps {
   slot: any
   onOpenLibrary: () => void
   onSaveUrl: (id: string, url: string) => Promise<void>
-  onToggleStatus: (id: string, currentStatus: boolean) => Promise<void>
+  onToggleStatus: (id: string, currentStatus: boolean, newUrl?: string) => Promise<void>
 }
 
 export function AdSlotCard({
@@ -85,17 +85,17 @@ export function AdSlotCard({
           <Button
             className="w-full text-xs font-bold h-11"
             variant={slot.is_active ? "secondary" : "default"}
-            onClick={() => onToggleStatus(slot.id, slot.is_active)}
+            onClick={() => onToggleStatus(slot.id, slot.is_active, targetUrl)}
           >
             {slot.is_active ? <PowerOff className="mr-2 h-4 w-4" /> : <Power className="mr-2 h-4 w-4" />}
-            {slot.is_active ? "临时停止投放" : "保存并立即上线"}
+            {slot.is_active ? "停止投放" : "立即投放"}
           </Button>
         </div>
       </div>
 
       {/* 点击放大查看图卡的弹窗 - 精简后的样式 */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent 
+        <DialogContent
           showCloseButton={false}
           className="w-[85vw] h-[75vh] p-0 border-none bg-black/70 shadow-none overflow-hidden flex items-center justify-center rounded-[2.5rem]"
         >

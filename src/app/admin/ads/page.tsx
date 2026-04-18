@@ -68,17 +68,33 @@ export default function AdsAdmin() {
   }
 
   // 4. 切换状态 (上线/下线)
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+  const handleToggleStatus = async (id: string, currentStatus: boolean, newUrl?: string) => {
+    const updateData: any = { is_active: !currentStatus }
+    
+    // 如果是“保存并上线”操作，且有跳转地址，则顺带保存
+    if (!currentStatus && newUrl) {
+      updateData.target_url = newUrl
+    }
+
     const { error } = await supabase
       .from('ads')
-      .update({ is_active: !currentStatus })
+      .update(updateData)
       .eq('id', id)
 
     if (error) {
       toast.error("更新失败: " + error.message)
     } else {
-      setAdSlots(prev => prev.map(s => s.id === id ? { ...s, is_active: !currentStatus } : s))
-      toast.success(currentStatus ? "广告已停用" : "广告已成功上线")
+      setAdSlots(prev => prev.map(s => {
+        if (s.id === id) {
+          const newData = { ...s, is_active: !currentStatus }
+          if (!currentStatus && newUrl) {
+            newData.target_url = newUrl
+          }
+          return newData
+        }
+        return s
+      }))
+      toast.success(currentStatus ? "广告已停用" : "广告配置已保存并成功上线")
     }
   }
 
