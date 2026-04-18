@@ -4,17 +4,19 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/utils/supabase/client"
 import { toast } from "sonner"
-import { Upload, ImageIcon, Loader2, Power, PowerOff } from "lucide-react"
+import { Upload, ImageIcon, Loader2, Power, PowerOff, Save, Library } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export default function AdsAdmin() {
   const supabase = createClient()
   const [uploading, setUploading] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [adSlots, setAdSlots] = useState<any[]>([])
+  const [assetLibrary, setAssetLibrary] = useState<string[]>([])
 
-  // 1. 加载所有广告位配置
   useEffect(() => {
     fetchAds()
+    fetchAssets()
   }, [])
 
   const fetchAds = async () => {
@@ -24,72 +26,99 @@ export default function AdsAdmin() {
       .select('*')
       .order('slot_name', { ascending: true })
     
-    if (!error && data) {
-      setAdSlots(data)
+    // 如果数据库没数据，这里 adSlots 就是空的，点击肯定没反应
+    if (error) {
+      toast.error("读取广告配置失败: " + error.message)
+    } else {
+      setAdSlots(data || [])
     }
     setLoading(false)
   }
 
-  // 2. 切换广告状态（上线/下线）
-  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+  // 获取过去上传过的素材
+  const fetchAssets = async () => {
+    const { data, error } = await supabase.storage.from('ads').list('banner')
+    if (!error && data) {
+      const urls = data.map(file => {
+        const { data: { publicUrl } } = supabase.storage.from('ads').getPublicUrl(`banner/${file.name}`)
+        return publicUrl
+      })
+      setAssetLibrary(urls)
+    }
+  }
+
+  const handleUpdateAd = async (slot: any) => {
     const { error } = await supabase
       .from('ads')
-      .update({ is_active: !currentStatus })
-      .eq('id', id)
+      .update({ 
+        is_active: slot.is_active,
+        target_url: slot.target_url,
+        image_url: slot.image_url
+      })
+      .eq('id', slot.id)
 
     if (error) {
-      toast.error("操作失败")
+      toast.error("更新失败: " + error.message)
     } else {
-      setAdSlots(prev => prev.map(slot => 
-        slot.id === id ? { ...slot, is_active: !currentStatus } : slot
-      ))
-      toast.success(currentStatus ? "广告已下线" : "广告已成功上线")
+      toast.success("配置已同步至公网")
+      // 局部刷新，不用全量 fetch
+      setAdSlots(prev => prev.map(s => s.id === slot.id ? slot : s))
     }
+  }
+
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    const target = adSlots.find(s => s.id === id)
+    if (!target) return
+    
+    const updated = { ...target, is_active: !currentStatus }
+    await handleUpdateAd(updated)
+  }
+
+  const handleInputChange = (id: string, value: string) => {
+    setAdSlots(prev => prev.map(s => s.id === id ? { ...s, target_url: value } : s))
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, slotId: string) => {
     try {
       const file = event.target.files?.[0]
       if (!file) return
-
       setUploading(slotId)
 
       const fileExt = file.name.split('.').pop()
-      const fileName = `${slotId}-${Math.random()}.${fileExt}`
+      const fileName = `${slotId}-${Date.now()}.${fileExt}`
       const filePath = `banner/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('ads')
-        .upload(filePath, file)
-
+      const { error: uploadError } = await supabase.storage.from('ads').upload(filePath, file)
       if (uploadError) throw uploadError
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('ads')
-        .getPublicUrl(filePath)
-
-      // 更新数据库中的图片链接
-      const { error: dbError } = await supabase
-        .from('ads')
-        .update({ image_url: publicUrl })
-        .eq('id', slotId)
-
-      if (dbError) throw dbError
-
-      setAdSlots(prev => prev.map(slot => 
-        slot.id === slotId ? { ...slot, image_url: publicUrl } : slot
-      ))
-
-      toast.success("图片上传成功")
+      const { data: { publicUrl } } = supabase.storage.from('ads').getPublicUrl(filePath)
+      
+      const target = adSlots.find(s => s.id === slotId)
+      await handleUpdateAd({ ...target, image_url: publicUrl })
+      fetchAssets() // 刷新库
     } catch (error: any) {
-      toast.error("上传错误", { description: error.message })
+      toast.error("上传错误: " + error.message)
     } finally {
       setUploading(null)
     }
   }
 
+  const selectFromLibrary = async (slotId: string, url: string) => {
+    const target = adSlots.find(s => s.id === slotId)
+    await handleUpdateAd({ ...target, image_url: url })
+  }
+
   if (loading) {
     return <div className="flex h-[400px] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+  }
+
+  if (adSlots.length === 0) {
+    return (
+      <div className="flex flex-col h-[400px] items-center justify-center space-y-4">
+        <p className="text-muted-foreground">检测到 ads 数据表为空</p>
+        <Button onClick={fetchAds}>刷新重试</Button>
+      </div>
+    )
   }
 
   return (
@@ -97,7 +126,7 @@ export default function AdsAdmin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">广告位管理</h1>
-          <p className="text-muted-foreground mt-1">控制预留的医疗广告资源位置。配置后将实时展示在前台对应槽位。</p>
+          <p className="text-muted-foreground mt-1">控制预留的医疗广告资源位置。您可以上传、从库选择素材并设置跳转链接。</p>
         </div>
       </div>
 
@@ -111,7 +140,7 @@ export default function AdsAdmin() {
                    slot.slot_name === 'sidebar' ? '侧边栏挂件' : '列表间隙广告'}
                 </h3>
                 <span className={`px-2 py-1 text-xs rounded-full ${slot.is_active ? 'bg-green-100 text-green-700 font-medium' : 'bg-gray-100 text-gray-500'}`}>
-                  {slot.is_active ? '已上线' : '待机中'}
+                  {slot.is_active ? '已上线' : '已停用'}
                 </span>
               </div>
               
@@ -119,38 +148,59 @@ export default function AdsAdmin() {
                 {slot.image_url ? (
                   <>
                     <img src={slot.image_url} alt={slot.slot_name} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <label className="cursor-pointer bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-3 py-1.5 rounded-md text-sm flex items-center gap-2">
-                        <Upload className="h-4 w-4" /> 替换素材
-                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, slot.id)} />
-                      </label>
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                       <div className="flex gap-2">
+                        <label className="cursor-pointer bg-white text-black px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-2 hover:bg-white/90">
+                          <Upload className="h-3 w-3" /> 本地上传
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, slot.id)} />
+                        </label>
+                        
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="secondary" size="sm" className="text-xs">
+                              <Library className="h-3 w-3 mr-2" /> 素材库
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader><DialogTitle>从素材库选择图片</DialogTitle></DialogHeader>
+                            <div className="grid grid-cols-3 gap-3 mt-4 max-h-[400px] overflow-y-auto p-1">
+                              {assetLibrary.map((url, i) => (
+                                <div key={i} className="aspect-video relative rounded-md overflow-hidden border hover:border-primary cursor-pointer" onClick={() => selectFromLibrary(slot.id, url)}>
+                                  <img src={url} className="w-full h-full object-cover" alt="asset" />
+                                </div>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                       </div>
                     </div>
                   </>
                 ) : (
-                  <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                    {uploading === slot.id ? (
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    ) : (
-                      <>
-                        <ImageIcon className="h-8 w-8" />
-                        <span className="text-sm">尚未上传素材</span>
-                      </>
-                    )}
-                    <input type="file" className="hidden" accept="image/*" disabled={uploading !== null} onChange={(e) => handleFileUpload(e, slot.id)} />
-                  </label>
+                  <div className="flex flex-col items-center gap-4">
+                     <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground">
+                        {uploading === slot.id ? <Loader2 className="h-8 w-8 animate-spin" /> : <ImageIcon className="h-8 w-8" />}
+                        <span className="text-sm">点击上传素材</span>
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, slot.id)} />
+                      </label>
+                  </div>
                 )}
               </div>
             </div>
 
             <div className="p-6 pt-0 mt-auto">
-              <label className="text-sm font-medium text-muted-foreground block mb-1">重定向链接</label>
-              <input 
-                type="text" 
-                className="w-full text-sm p-2 border rounded bg-background mb-4 outline-none focus:ring-1 focus:ring-primary" 
-                defaultValue={slot.target_url} 
-                placeholder="https://"
-                disabled // 暂时锁定，后续可加保存按钮
-              />
+              <label className="text-sm font-medium text-muted-foreground block mb-1">重定向跳转 URL</label>
+              <div className="flex gap-2 mb-4">
+                <input 
+                  type="text" 
+                  className="flex-1 text-sm p-2 border rounded bg-background outline-none focus:ring-1 focus:ring-primary" 
+                  value={slot.target_url || ''} 
+                  onChange={(e) => handleInputChange(slot.id, e.target.value)}
+                  placeholder="https://"
+                />
+                <Button size="icon" variant="ghost" className="h-9 w-9 border" onClick={() => handleUpdateAd(slot)}>
+                  <Save className="h-4 w-4" />
+                </Button>
+              </div>
               <Button 
                 className="w-full" 
                 variant={slot.is_active ? "outline" : "default"}
@@ -159,7 +209,7 @@ export default function AdsAdmin() {
                 {slot.is_active ? (
                   <><PowerOff className="mr-2 h-4 w-4" /> 下架广告</>
                 ) : (
-                  <><Power className="mr-2 h-4 w-4" /> 立即上线</>
+                  <><Power className="mr-2 h-4 w-4" /> 保存并上线</>
                 )}
               </Button>
             </div>
@@ -169,4 +219,5 @@ export default function AdsAdmin() {
     </div>
   )
 }
+
 
