@@ -389,8 +389,6 @@ create policy "管理员可操作广告" on ads for all using (auth.role() = 'au
       </div>
     </div>
   )
-
-  )
 }
 
 
