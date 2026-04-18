@@ -80,18 +80,18 @@ export function AssetLibraryDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl min-h-[600px] flex flex-col p-6 overflow-hidden">
-          <div className="flex items-center justify-between pb-4 border-b">
-            <h2 className="text-2xl font-bold">广告素材图库</h2>
-            <label className="cursor-pointer bg-primary text-primary-foreground px-5 py-2.5 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm">
-              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+        <DialogContent className="sm:max-w-[60vw] w-[90vw] min-h-[70vh] flex flex-col p-8 overflow-hidden">
+          <div className="flex items-center justify-between pb-6 border-b">
+            <h2 className="text-3xl font-bold">广告素材图库</h2>
+            <label className="cursor-pointer bg-primary text-primary-foreground px-6 py-3 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm">
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
               上传新图片
               <input type="file" className="hidden" accept="image/*" disabled={uploading} onChange={handleFileUpload} />
             </label>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-6 pr-2">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="flex-1 overflow-y-auto py-8 pr-4">
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-8">
               {assetLibrary.length > 0 ? assetLibrary.map((url, i) => (
                 <div 
                   key={i} 
