@@ -33,34 +33,33 @@ export function AdSlotCard({
         <div className="p-6 pb-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-base">{slotTitle}</h3>
-            <div className={`px-2 py-0.5 text-[10px] font-black uppercase rounded border ${
-                slot.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-zinc-50 text-zinc-400 border-zinc-200"
-            }`}>
+            <div className={`px-2 py-0.5 text-[10px] font-black uppercase rounded border ${slot.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-zinc-50 text-zinc-400 border-zinc-200"
+              }`}>
               {slot.is_active ? "Live" : "Idle"}
             </div>
           </div>
-          
+
           <div className="group relative aspect-video w-full rounded-xl bg-muted border-2 border-dashed border-border/80 flex items-center justify-center overflow-hidden transition-all hover:border-primary/50">
             {slot.image_url ? (
-               <img src={slot.image_url} alt="ads" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
+              <img src={slot.image_url} alt="ads" className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500" />
             ) : (
-               <div className="flex flex-col items-center gap-3 text-muted-foreground group-hover:text-primary transition-all cursor-pointer" onClick={onOpenLibrary}>
-                 <ImageIcon className="h-12 w-12 opacity-30" />
-                 <span className="text-xs font-semibold">点击选择素材</span>
-               </div>
+              <div className="flex flex-col items-center gap-3 text-muted-foreground group-hover:text-primary transition-all cursor-pointer" onClick={onOpenLibrary}>
+                <ImageIcon className="h-12 w-12 opacity-30" />
+                <span className="text-xs font-semibold">点击选择素材</span>
+              </div>
             )}
-            
+
             {/* 悬浮操作层 */}
             {slot.image_url && (
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                 <Button variant="secondary" size="sm" className="h-9 font-bold bg-white/90 hover:bg-white text-black" onClick={onOpenLibrary}>
-                    <ImagePlus className="w-4 h-4 mr-2" />
-                    去图库换图
-                 </Button>
-                 <Button variant="outline" size="sm" className="h-9 font-bold bg-black/50 hover:bg-black/80 text-white border-white/20" onClick={() => setShowPreview(true)}>
-                    <ZoomIn className="w-4 h-4 mr-2" />
-                    放大预览
-                 </Button>
+                <Button variant="secondary" size="sm" className="h-9 font-bold bg-white/90 hover:bg-white text-black" onClick={onOpenLibrary}>
+                  <ImagePlus className="w-4 h-4 mr-2" />
+                  去图库换图
+                </Button>
+                <Button variant="outline" size="sm" className="h-9 font-bold bg-black/50 hover:bg-black/80 text-white border-white/20" onClick={() => setShowPreview(true)}>
+                  <ZoomIn className="w-4 h-4 mr-2" />
+                  放大预览
+                </Button>
               </div>
             )}
           </div>
@@ -74,16 +73,16 @@ export function AdSlotCard({
                 <Save className="h-3 w-3" />
               </Button>
             </div>
-            <input 
-              type="text" 
-              className="w-full text-xs p-2.5 rounded-lg border bg-background focus:ring-1 focus:ring-primary outline-none" 
-              value={targetUrl} 
+            <input
+              type="text"
+              className="w-full text-xs p-2.5 rounded-lg border bg-background focus:ring-1 focus:ring-primary outline-none"
+              value={targetUrl}
               onChange={(e) => setTargetUrl(e.target.value)}
               placeholder="https://..."
             />
           </div>
 
-          <Button 
+          <Button
             className="w-full text-xs font-bold h-11"
             variant={slot.is_active ? "secondary" : "default"}
             onClick={() => onToggleStatus(slot.id, slot.is_active)}
@@ -94,27 +93,27 @@ export function AdSlotCard({
         </div>
       </div>
 
-      {/* 点击放大查看图卡的弹窗 */}
+      {/* 点击放大查看图卡的弹窗 - 优化后的全屏预览 */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-         <DialogContent className="max-w-[90vw] w-fit p-1 border-none bg-transparent shadow-none overflow-visible">
-            <div className="relative flex items-center justify-center bg-black/5 rounded-lg">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="absolute -top-12 -right-12 rounded-full bg-background/50 hover:bg-background text-white border-none shadow-xl h-10 w-10 backdrop-blur"
-                onClick={() => setShowPreview(false)}
-              >
-                 <X className="h-5 w-5 text-foreground" />
-              </Button>
-              {slot.image_url && (
-                <img 
-                  src={slot.image_url} 
-                  alt="preview" 
-                  className="max-h-[85vh] object-contain rounded-lg shadow-2xl border border-white/10" 
-                />
-              )}
-            </div>
-         </DialogContent>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full p-0 border-none bg-black/40 shadow-none overflow-hidden flex items-center justify-center">
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border-none shadow-2xl h-12 w-12 backdrop-blur-md"
+              onClick={() => setShowPreview(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            {slot.image_url && (
+              <img
+                src={slot.image_url}
+                alt="preview"
+                className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-300 transform scale-100 translate-z-0"
+              />
+            )}
+          </div>
+        </DialogContent>
       </Dialog>
     </>
   )

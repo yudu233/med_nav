@@ -155,23 +155,24 @@ export function AssetLibraryDialog({
         </DialogContent>
       </Dialog>
 
-      {/* 沉浸式放大预览层 */}
+      {/* 沉浸式放大预览层 - 优化后的全屏预览 */}
       <Dialog open={!!previewImage} onOpenChange={(v) => !v && setPreviewImage(null)}>
-         <DialogContent className="max-w-[90vw] w-fit p-1 border-none bg-transparent shadow-none overflow-visible">
-            <div className="relative flex items-center justify-center bg-black/5 rounded-lg">
+         <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0 border-none bg-black/40 shadow-none overflow-hidden flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center p-4">
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="absolute -top-12 -right-12 rounded-full bg-background/50 hover:bg-background text-white border-none shadow-xl h-10 w-10 backdrop-blur"
+                className="absolute top-4 right-4 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white border-none shadow-2xl h-12 w-12 backdrop-blur-md"
                 onClick={() => setPreviewImage(null)}
               >
-                 <X className="h-5 w-5 text-foreground" />
+                 <X className="h-6 w-6" />
               </Button>
+              
               {previewImage && (
                 <img 
                   src={previewImage} 
                   alt="preview" 
-                  className="max-h-[85vh] object-contain rounded-lg shadow-2xl border border-white/10" 
+                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-300 transform scale-100 translate-z-0" 
                 />
               )}
             </div>
