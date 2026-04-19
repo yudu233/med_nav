@@ -11,11 +11,7 @@ export async function GET(
 
   console.log(`[Redirect] Processing ID: ${id}`)
 
-  if (!id) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
 
-  console.log(`[Redirect] Processing ID: ${id}`)
 
   const supabase = await createClient()
 
