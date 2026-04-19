@@ -61,6 +61,6 @@ export async function GET(
   // 3. 302 临时重定向至目标网站
   // 4. 添加或覆盖参数
   targetUrl.searchParams.set("utm_source", "med-nav"); // 推荐使用 utm 标准格式
-  targetUrl.searchParams.set("from", "med-nav.vercel.app");
+  targetUrl.searchParams.set("from", request.url);
   return NextResponse.redirect(targetUrl.toString(), 302)
 }
