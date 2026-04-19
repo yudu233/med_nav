@@ -26,7 +26,7 @@ export async function GET(
     console.error(`[Redirect] Failed to find link for ID ${id}:`, error || "No data")
     if (link) console.log("[Redirect] Found link object but no url:", link)
     // 找不到真实数据或遭遇错误时，安全降级退回到首页
-    return NextResponse.redirect(new URL("/", request.url))
+    return NextResponse.redirect(new URL("/", "/"))
   }
 
   let rawUrl = link.url.trim()
@@ -40,7 +40,7 @@ export async function GET(
     targetUrl = new URL(rawUrl)
   } catch (e) {
     console.error(`[Redirect] Invalid target URL "${rawUrl}":`, e)
-    return NextResponse.redirect(new URL("/", request.url))
+    return NextResponse.redirect(new URL("/", "/"))
   }
 
   const currentCount = link.click_count || 0
