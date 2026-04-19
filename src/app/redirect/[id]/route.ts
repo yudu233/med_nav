@@ -20,9 +20,13 @@ export async function GET(
     .eq("id", id)
     .single()
 
-  // TODO: 因为还在开发阶段未连通表，提供一个测试回退逻辑
-  const targetUrl = link?.url || `https://google.com/search?q=test_redirect_${id}`
-  const currentCount = link?.click_count || 0
+  if (error || !link || !link.url) {
+    // 找不到真实数据或遭遇错误时，安全降级退回到首页
+    return NextResponse.redirect(new URL("/", request.url))
+  }
+
+  const targetUrl = link.url
+  const currentCount = link.click_count || 0
 
   // 2. 异步增加点击量 (无需等待它完成再重定向，以保证前端极速跳转)
   if (!error && link) {
