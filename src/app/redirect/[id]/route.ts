@@ -9,9 +9,11 @@ export async function GET(
 ) {
   const { id } = await props.params; // 严格 await
 
+  if (!id) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   console.log(`[Redirect] Processing ID: ${id}`)
-
-
 
   const supabase = await createClient()
 
@@ -26,7 +28,7 @@ export async function GET(
     console.error(`[Redirect] Failed to find link for ID ${id}:`, error || "No data")
     if (link) console.log("[Redirect] Found link object but no url:", link)
     // 找不到真实数据或遭遇错误时，安全降级退回到首页
-    return NextResponse.redirect(new URL("/", "/"))
+    return NextResponse.redirect(new URL("/", request.url))
   }
 
   let rawUrl = link.url.trim()
@@ -40,7 +42,7 @@ export async function GET(
     targetUrl = new URL(rawUrl)
   } catch (e) {
     console.error(`[Redirect] Invalid target URL "${rawUrl}":`, e)
-    return NextResponse.redirect(new URL("/", "/"))
+    return NextResponse.redirect(new URL("/", request.url))
   }
 
   const currentCount = link.click_count || 0
@@ -57,5 +59,8 @@ export async function GET(
     })
 
   // 3. 302 临时重定向至目标网站
+  // 4. 添加或覆盖参数
+  targetUrl.searchParams.set("utm_source", "med-nav"); // 推荐使用 utm 标准格式
+  targetUrl.searchParams.set("from", "med-nav.vercel.app");
   return NextResponse.redirect(targetUrl.toString(), 302)
 }
