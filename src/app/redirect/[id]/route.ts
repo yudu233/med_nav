@@ -3,59 +3,68 @@ import { createClient } from "@/utils/supabase/server"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // In Next 15, params in Route Handlers should be destructured or awaited
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  // 1. 先确认路由参数是否拿到了
   const { id } = await params;
-  
+  console.log(`[调试] 收到请求，路由参数 id =`, id)
+
   if (!id) {
+    console.log(`[错误分支] id 为空，跳转到首页`)
     return NextResponse.redirect(new URL("/", request.url))
   }
-
-  console.log(`[Redirect] Processing ID: ${id}`)
 
   const supabase = await createClient()
 
-  // 1. 查询目标网址的真实 URL
+  // 2. 查询数据库，看看有没有拿到数据
+  console.log(`[调试] 正在查询 Supabase，id =`, id)
   const { data: link, error } = await supabase
     .from("links")
-    .select("url, click_count")
+    .select("url, click_count, id") // 多查一个id，确认数据是否匹配
     .eq("id", id)
     .single()
 
-  if (error || !link || !link.url) {
-    console.error(`[Redirect] Failed to find link for ID ${id}:`, error || "No data")
-    if (link) console.log("[Redirect] Found link object but no url:", link)
-    // 找不到真实数据或遭遇错误时，安全降级退回到首页
+  console.log(`[调试] 查询结果：`, { link, error })
+
+  // 分支1：查询出错或没数据
+  if (error || !link) {
+    console.error(`[错误分支] 查询失败：`, error || "link 为 null")
     return NextResponse.redirect(new URL("/", request.url))
   }
 
+  // 分支2：数据里没有 url 字段
+  if (!link.url) {
+    console.error(`[错误分支] 数据存在但 url 为空：`, link)
+    return NextResponse.redirect(new URL("/", request.url))
+  }
+
+  // 3. 处理 URL，看看是不是格式问题
+  console.log(`[调试] 原始 url：`, link.url)
   let rawUrl = link.url.trim()
-  // 确保 URL 带有协议头
   if (!rawUrl.startsWith('http')) {
     rawUrl = `https://${rawUrl}`
   }
+  console.log(`[调试] 处理后 url：`, rawUrl)
 
   let targetUrl: URL
   try {
     targetUrl = new URL(rawUrl)
+    console.log(`[调试] URL 解析成功，目标地址：`, targetUrl.toString())
   } catch (e) {
-    console.error(`[Redirect] Invalid target URL "${rawUrl}":`, e)
+    console.error(`[错误分支] URL 解析失败：`, e)
     return NextResponse.redirect(new URL("/", request.url))
   }
 
-  const currentCount = link.click_count || 0
-
-  // 2. 异步增加点击量 (无需等待它完成再重定向，以保证前端极速跳转)
-  // 注意：在 Route Handler 中，如果不 await，Node.js 环境下可能在响应发送后立刻杀掉进程，导致更新失败
-  // 但为了用户体验，我们保持异步，或者使用 waitUntil (如果是在边缘环境)
+  // 异步更新点击量（不影响重定向，先不管它）
   supabase
     .from("links")
-    .update({ click_count: currentCount + 1 })
+    .update({ click_count: (link.click_count || 0) + 1 })
     .eq("id", id)
     .then(({ error }) => {
-       if (error) console.error("[Redirect] Update click count failed:", error)
+      if (error) console.error("[调试] 更新点击量失败：", error)
     })
 
-  // 3. 302 临时重定向至目标网站
+  // 正常重定向
+  console.log(`[调试] 准备重定向到：`, targetUrl.toString())
   return NextResponse.redirect(targetUrl.toString(), 302)
 }
