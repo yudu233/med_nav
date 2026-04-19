@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/client"
 
 import { Button } from "@/components/ui/button"
 import { CategoryFormDialog, Category } from "./components/CategoryFormDialog"
-import { CategoryLinksSheet } from "./components/CategoryLinksSheet"
+import { CategoryLinksDialog } from "./components/CategoryLinksDialog"
 
 export default function CategoriesAdmin() {
   const supabase = createClient()
@@ -20,8 +20,8 @@ export default function CategoriesAdmin() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
-  // Sheet State
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  // Links Dialog State
+  const [isLinksDialogOpen, setIsLinksDialogOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState<Category | null>(null)
 
   useEffect(() => {
@@ -219,7 +219,7 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
                           className="h-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
                           onClick={() => {
                             setActiveCategory(parentCat)
-                            setIsSheetOpen(true)
+                            setIsLinksDialogOpen(true)
                           }}
                         >
                           网址管理
@@ -254,7 +254,7 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
                             className="h-7 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40"
                             onClick={() => {
                               setActiveCategory(subCat)
-                              setIsSheetOpen(true)
+                              setIsLinksDialogOpen(true)
                             }}
                           >
                             挂载网址
@@ -284,9 +284,9 @@ create policy "管理员可操作分类" on categories for all using (auth.role(
         onSubmit={handleFormSubmit}
       />
 
-      <CategoryLinksSheet
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
+      <CategoryLinksDialog
+        open={isLinksDialogOpen}
+        onOpenChange={setIsLinksDialogOpen}
         category={activeCategory}
       />
     </div>
