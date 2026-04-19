@@ -86,22 +86,21 @@ export default async function AdminDashboard() {
                 topLinks.map((link, idx) => (
                   <tr key={link.id} className="border-b last:border-0 hover:bg-muted/20 transition-colors group">
                     <td className="px-4 py-4 text-center">
-                      <span className={\`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold \${
-                        idx === 0 ? "bg-yellow-100 text-yellow-700 font-black" : 
+                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${idx === 0 ? "bg-yellow-100 text-yellow-700 font-black" :
                         idx === 1 ? "bg-slate-200 text-slate-700" :
-                        idx === 2 ? "bg-orange-100 text-orange-800" : "bg-muted text-muted-foreground font-normal"
-                      }\`}>
+                          idx === 2 ? "bg-orange-100 text-orange-800" : "bg-muted text-muted-foreground font-normal"
+                        }`}>
                         {idx + 1}
                       </span>
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3 w-full max-w-[400px]">
                         <div className="w-9 h-9 shrink-0 bg-background border rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
-                           {link.icon_url ? (
-                             <img src={link.icon_url} alt="" className="w-full h-full object-cover" />
-                           ) : (
-                             <ExternalLink className="w-4 h-4 text-muted-foreground/60" />
-                           )}
+                          {link.icon_url ? (
+                            <img src={link.icon_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <ExternalLink className="w-4 h-4 text-muted-foreground/60" />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-semibold text-foreground truncate">{link.title}</h4>
@@ -116,9 +115,9 @@ export default async function AdminDashboard() {
                     </td>
                     <td className="px-5 py-4">
                       <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                         <a href={link.url} target="_blank" rel="noreferrer" className="text-xs flex items-center text-muted-foreground hover:text-primary transition-colors">
-                           拜访 <ExternalLink className="w-3 h-3 ml-1" />
-                         </a>
+                        <a href={link.url} target="_blank" rel="noreferrer" className="text-xs flex items-center text-muted-foreground hover:text-primary transition-colors">
+                          拜访 <ExternalLink className="w-3 h-3 ml-1" />
+                        </a>
                       </span>
                     </td>
                   </tr>
